@@ -1107,19 +1107,6 @@ convpreserve batch pairs.jsonl --baseline baseline.json">Copy</button></div>
           <span class="meta-tag">--oracle v1.0</span>
         </div>
       </div>
-      <div class="code-card">
-        <div class="code-head">
-          <span>BibTeX</span>
-          <button class="copy-btn" type="button" id="bib-copy">Copy</button>
-        </div>
-        <pre id="bib-text">@article{convpreserve2026,
-  title   = {Testing Conversation Preservation Across LLM APIs: A Rule-Based
-             Oracle for Detecting Silent Information Loss},
-  author  = {Anonymous},
-  journal = {Under review},
-  year    = {2026}
-}</pre>
-      </div>
     </div>
   </div>
 </section>
@@ -1336,7 +1323,7 @@ document.querySelectorAll(".seg-tabs").forEach(group => {
 
 document.querySelectorAll(".copy-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    const text = btn.id === "bib-copy" ? document.getElementById("bib-text").innerText : btn.dataset.copy;
+    const text = btn.dataset.copy;
     navigator.clipboard.writeText(text).then(() => {
       const prev = btn.textContent;
       btn.textContent = "Copied";
