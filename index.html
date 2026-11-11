@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ConvPreserve — Deterministic Test Oracle for LLM API Translators</title>
-<meta name="description" content="Deterministic, rule-based test oracle for silent semantic changes across OpenAI, Anthropic, and Gemini API translators.">
+<title>ConvPreserve — Testing Conversation Preservation Across LLM APIs</title>
+<meta name="description" content="A deterministic, rule-based test oracle for detecting silent information loss across OpenAI, Anthropic, and Gemini API translators.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2.5' y='3.5' width='19' height='17' rx='3' fill='none' stroke='%231a73e8' stroke-width='2'/%3E%3Cpath d='M6.5 9h5M6.5 13h7M6.5 17h4' stroke='%231a73e8' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M14.2 15.3l2 2 3.6-4' stroke='%23188038' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root {
@@ -34,8 +34,6 @@
   --ok-line: #ceead6;
   --diff-bad: #fce8e6;
   --diff-bad-bar: #d93025;
-  --diff-ok: #e6f4ea;
-  --diff-ok-bar: #188038;
   --syn-key: #174ea6;
   --syn-str: #0d652d;
   --syn-lit: #b06000;
@@ -72,8 +70,6 @@
     --ok-line: rgba(129, 201, 149, 0.35);
     --diff-bad: rgba(242, 139, 130, 0.14);
     --diff-bad-bar: #f28b82;
-    --diff-ok: rgba(129, 201, 149, 0.12);
-    --diff-ok-bar: #81c995;
     --syn-key: #8ab4f8;
     --syn-str: #81c995;
     --syn-lit: #fdd663;
@@ -107,8 +103,6 @@
   --ok-line: rgba(129, 201, 149, 0.35);
   --diff-bad: rgba(242, 139, 130, 0.14);
   --diff-bad-bar: #f28b82;
-  --diff-ok: rgba(129, 201, 149, 0.12);
-  --diff-ok-bar: #81c995;
   --syn-key: #8ab4f8;
   --syn-str: #81c995;
   --syn-lit: #fdd663;
@@ -119,7 +113,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 72px; }
 body {
   margin: 0;
   overflow-x: hidden;
-  font: 400 14.5px/1.6 var(--sans);
+  font: 400 15px/1.65 var(--sans);
   background: var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -128,7 +122,7 @@ a { color: var(--blue-ink); text-decoration: none; }
 a:hover { text-decoration: underline; }
 code, pre { font-family: var(--mono); }
 :not(pre) > code {
-  font-size: 12px;
+  font-size: 12.5px;
   background: var(--surface);
   border: 1px solid var(--border-subtle);
   padding: 1px 5px;
@@ -136,9 +130,9 @@ code, pre { font-family: var(--mono); }
   color: var(--ink);
   white-space: nowrap;
 }
-.wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
 
-/* Top App Bar */
+/* Top Bar */
 .topbar {
   position: sticky;
   top: 0;
@@ -202,21 +196,13 @@ code, pre { font-family: var(--mono); }
   gap: 8px;
   flex-shrink: 0;
 }
-.ver-pill {
-  font: 500 11.5px/1 var(--mono);
-  color: var(--ink-2);
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  padding: 5px 8px;
-  border-radius: 4px;
-}
 .icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 50%;
   background: transparent;
   color: var(--ink-2);
@@ -229,7 +215,7 @@ code, pre { font-family: var(--mono); }
   align-items: center;
   gap: 6px;
   height: 34px;
-  padding: 0 13px;
+  padding: 0 14px;
   border: 1px solid var(--border);
   border-radius: 17px;
   font: 500 13px/1 var(--sans-display);
@@ -239,98 +225,51 @@ code, pre { font-family: var(--mono); }
 .repo-btn:hover { background: var(--surface); text-decoration: none; }
 .repo-btn svg { width: 15px; height: 15px; }
 
-/* Sections & Headings */
+/* Sections */
 section {
   padding: 52px 0;
   border-bottom: 1px solid var(--border-subtle);
 }
 section:last-of-type { border-bottom: 0; }
 h1 {
-  font: 500 clamp(27px, 3vw, 35px)/1.22 var(--sans-display);
+  font: 500 clamp(28px, 3vw, 36px)/1.22 var(--sans-display);
   letter-spacing: -0.02em;
   margin: 0 0 14px;
   color: var(--ink);
 }
-.sec-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
 h2 {
   font: 500 22px/1.3 var(--sans-display);
   letter-spacing: -0.015em;
-  margin: 0;
+  margin: 0 0 18px;
   color: var(--ink);
 }
-.sec-sub {
-  font-size: 13.5px;
-  color: var(--ink-2);
+h3 {
+  font: 500 15px/1.4 var(--sans-display);
+  margin: 0 0 10px;
+  color: var(--ink);
 }
 
-/* Overview Hero */
+/* Overview */
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 5.4fr) minmax(0, 6.6fr);
+  grid-template-columns: minmax(0, 5.2fr) minmax(0, 6.8fr);
   gap: 36px;
-  align-items: start;
+  align-items: center;
 }
 .lead {
   color: var(--ink-2);
-  font-size: 15px;
+  font-size: 15.5px;
   line-height: 1.65;
   margin: 0 0 22px;
 }
-.install-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 7px 8px 7px 12px;
-  margin-bottom: 16px;
-}
-.install-box code {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  font-size: 11.5px;
-  letter-spacing: -0.01em;
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
-}
-.install-box code::-webkit-scrollbar { display: none; }
-.prompt { color: var(--ink-3); user-select: none; }
-.copy-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 27px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: var(--bg);
-  color: var(--ink-2);
-  font: 500 11.5px/1 var(--sans-display);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-.copy-btn:hover { background: var(--surface-2); color: var(--ink); }
-
 .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
 .btn-fill, .btn-tonal {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 18px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 19px;
   font: 500 13.5px/1 var(--sans-display);
 }
 .btn-fill { background: var(--blue); color: #ffffff; }
@@ -346,70 +285,26 @@ h2 {
 }
 .btn-tonal:hover { background: var(--surface); text-decoration: none; }
 
-.spec-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.scope-note {
   border-top: 1px solid var(--border-subtle);
   padding-top: 16px;
-  gap: 12px 20px;
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--ink-2);
 }
-.spec-list dt { color: var(--ink-3); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
-.spec-list dd { margin: 2px 0 0; color: var(--ink); font-size: 13px; font-weight: 500; }
+.scope-note strong {
+  color: var(--ink);
+  font-weight: 500;
+}
 
-/* Live Payload & Verdict Inspector */
-.inspector {
+/* Payload Comparison Card (shared geometry for Overview & Examples) */
+.compare-card {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
   overflow: hidden;
-}
-.inspector-tabs {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.inspector-tabs::-webkit-scrollbar { display: none; }
-.inspector-tabs button {
-  position: relative;
-  border: 0;
-  background: transparent;
-  padding: 10px 13px;
-  font: 500 12.5px/1.2 var(--sans-display);
-  color: var(--ink-2);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.inspector-tabs button:hover { color: var(--ink); background: var(--surface-2); }
-.inspector-tabs button[aria-selected="true"] {
-  color: var(--blue-ink);
-  background: var(--bg);
-}
-.inspector-tabs button[aria-selected="true"]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background: var(--blue);
-}
-.inspector-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-subtle);
-  font: 400 11.5px/1.5 var(--mono);
-  color: var(--ink-2);
-  background: var(--bg);
-}
-.inspector-meta #ins-cmd {
-  min-width: 0;
-  white-space: pre-wrap;
 }
 .diff-panes {
   display: grid;
@@ -422,17 +317,17 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 12px;
-  font: 500 11.5px/1.3 var(--mono);
-  color: var(--ink-2);
+  padding: 7px 12px;
+  font: 500 12px/1.3 var(--sans-display);
+  color: var(--ink);
   background: var(--surface);
   border-bottom: 1px solid var(--border-subtle);
 }
-.pane-dialect { color: var(--ink-3); font-weight: 400; }
+.pane-sub { color: var(--ink-2); font-family: var(--mono); font-size: 11.5px; font-weight: 400; }
 .pane pre {
   margin: 0;
-  padding: 10px 0;
-  font: 400 11.8px/1.62 var(--mono);
+  padding: 11px 0;
+  font: 400 12px/1.62 var(--mono);
   overflow-x: auto;
   color: var(--ink);
   flex: 1;
@@ -443,11 +338,11 @@ h2 {
   white-space: pre;
 }
 .pane pre .lno {
-  width: 28px;
+  width: 26px;
   padding-right: 8px;
   text-align: right;
   color: var(--ink-3);
-  opacity: 0.65;
+  opacity: 0.6;
   user-select: none;
   flex-shrink: 0;
 }
@@ -455,64 +350,35 @@ h2 {
   background: var(--diff-bad);
   box-shadow: inset 3px 0 0 var(--diff-bad-bar);
 }
-.pane pre .ln.good {
-  background: var(--diff-ok);
-  box-shadow: inset 3px 0 0 var(--diff-ok-bar);
-}
 .sk { color: var(--syn-key); }
 .ss { color: var(--syn-str); }
 .sn { color: var(--syn-lit); }
 .sc { color: var(--ink-3); font-style: italic; }
 
-.verdict-bar {
-  padding: 10px 12px;
+.contrast-rows {
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
-  font: 400 12px/1.55 var(--mono);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  font-size: 13px;
 }
-.verdict-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--ink-3);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-family: var(--sans-display);
-  font-weight: 500;
-}
-.finding-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.finding-row {
+.contrast-row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: baseline;
+  grid-template-columns: 148px auto minmax(0, 1fr);
+  align-items: center;
   gap: 10px;
-  color: var(--ink);
-  font: 400 12px/1.5 var(--mono);
+  padding: 9px 14px;
 }
-.finding-detail {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.ptr {
-  color: var(--blue-ink);
-  font-size: 11.5px;
-  white-space: nowrap;
-}
+.contrast-row + .contrast-row { border-top: 1px solid var(--border-subtle); }
+.contrast-label { color: var(--ink-2); font-weight: 500; font-size: 12.5px; }
+.contrast-desc { color: var(--ink); font-size: 13px; min-width: 0; }
 
 /* Chips */
 .chip {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 4px;
-  font: 500 11px/1.25 var(--mono);
+  font: 500 11.5px/1.3 var(--mono);
   border: 1px solid transparent;
   white-space: nowrap;
   flex-shrink: 0;
@@ -522,94 +388,68 @@ h2 {
 .chip.t3 { color: var(--t3-ink); background: var(--t3-bg); border-color: var(--t3-line); }
 .chip.ok { color: var(--ok-ink); background: var(--ok-bg); border-color: var(--ok-line); }
 
-/* Architecture Specification Grid (Overview bottom) */
-.spec-matrix {
-  margin-top: 28px;
+/* Code Cards (Getting Started & Paper) */
+.two-col {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  overflow: hidden;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
 }
-.matrix-cell {
-  padding: 15px 18px;
-  border-right: 1px solid var(--border-subtle);
-}
-.matrix-cell:last-child { border-right: 0; }
-.matrix-kicker {
-  font: 500 11px/1.2 var(--sans-display);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-3);
-  margin-bottom: 8px;
-}
-.matrix-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12.5px;
-}
-.matrix-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-}
-.matrix-key {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--ink);
-}
-.matrix-note {
-  color: var(--ink-3);
-  font-size: 11.5px;
-  white-space: nowrap;
-}
-
-/* Code Cards */
 .code-card {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .code-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg);
-  font: 500 12px/1.2 var(--sans-display);
-  color: var(--ink-2);
-}
-.code-head .mono-label { font-family: var(--mono); font-weight: 400; }
-.code-card pre {
-  margin: 0;
-  padding: 13px 16px;
-  overflow-x: auto;
-  font: 400 12px/1.65 var(--mono);
+  font: 500 13px/1.2 var(--sans-display);
   color: var(--ink);
 }
-.cm { color: var(--ink-3); }
-.ok-txt { color: var(--ok-ink); font-weight: 500; }
-.t1-txt { color: var(--t1-ink); font-weight: 500; }
-.t2-txt { color: var(--t2-ink); font-weight: 500; }
-.ptr-txt { color: var(--blue-ink); }
-
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  align-items: start;
+.code-card pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font: 400 12.5px/1.65 var(--mono);
+  color: var(--ink);
+  flex: 1;
 }
+.code-foot {
+  padding: 9px 16px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.prompt { color: var(--ink-3); user-select: none; }
+.t1-txt { color: var(--t1-ink); font-weight: 500; }
+.ptr-txt { color: var(--blue-ink); }
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--ink-2);
+  font: 500 11.5px/1 var(--sans-display);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.copy-btn:hover { background: var(--surface-2); color: var(--ink); }
 
-/* Tables (Clean Google Reference Hairline Style) */
+/* Documentation Tables */
+.doc-stack { display: flex; flex-direction: column; gap: 22px; }
 .table-box {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -621,11 +461,10 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13.5px;
-  font-variant-numeric: tabular-nums;
 }
 th, td {
   text-align: left;
-  padding: 10px 14px;
+  padding: 11px 16px;
   border-bottom: 1px solid var(--border-subtle);
   vertical-align: top;
 }
@@ -637,7 +476,6 @@ th {
   white-space: nowrap;
 }
 tr:last-child td { border-bottom: 0; }
-td.num, th.num { text-align: right; white-space: nowrap; }
 td.cmd-col {
   font-family: var(--mono);
   font-size: 12.5px;
@@ -650,100 +488,64 @@ td.opt-col {
   font-size: 12px;
   color: var(--ink-2);
 }
-.exit-sub {
-  display: block;
-  font-size: 11.5px;
-  color: var(--ink-3);
-  margin-top: 2px;
-}
+td.nowrap { white-space: nowrap; }
 
-/* Segmented Tabs */
-.seg-tabs {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
+/* Examples Tabs + Viewer */
+.ex-tabs {
+  display: flex;
   background: var(--surface);
-  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
-.seg-tabs button {
+.ex-tabs::-webkit-scrollbar { display: none; }
+.ex-tabs button {
+  position: relative;
   border: 0;
-  border-right: 1px solid var(--border);
   background: transparent;
-  padding: 6px 12px;
-  font: 500 12.5px/1.2 var(--sans-display);
+  padding: 11px 16px;
+  font: 500 13px/1.2 var(--sans-display);
   color: var(--ink-2);
   cursor: pointer;
+  white-space: nowrap;
 }
-.seg-tabs button:last-child { border-right: 0; }
-.seg-tabs button:hover { color: var(--ink); }
-.seg-tabs button[aria-selected="true"] {
-  background: var(--blue-tint);
+.ex-tabs button:hover { color: var(--ink); background: var(--surface-2); }
+.ex-tabs button[aria-selected="true"] {
   color: var(--blue-ink);
-}
-[hidden] { display: none !important; }
-
-/* Interactive Examples Explorer */
-.explorer {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
   background: var(--bg);
 }
-.ex-list { border-right: 1px solid var(--border); }
-.ex-item {
-  width: 100%;
-  border: 0;
-  border-bottom: 1px solid var(--border-subtle);
-  background: transparent;
-  text-align: left;
-  padding: 11px 14px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--ink);
+.ex-tabs button[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--blue);
 }
-.ex-item:last-child { border-bottom: 0; }
-.ex-item:hover { background: var(--surface); }
-.ex-item[aria-selected="true"] {
-  background: var(--blue-tint);
-  box-shadow: inset 3px 0 0 var(--blue);
-}
-.ex-top {
+.ex-verdict {
+  padding: 12px 16px;
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  font: 500 12.5px/1.3 var(--mono);
+  gap: 12px;
+  flex-wrap: wrap;
 }
-.ex-sub { font-size: 12.5px; color: var(--ink-2); }
-.ex-detail {
-  background: var(--surface);
+.ex-verdict-main {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.ex-detail pre {
-  margin: 0;
-  padding: 13px 16px;
-  font: 400 12px/1.62 var(--mono);
-  overflow-x: auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
   color: var(--ink);
 }
-.ex-detail .sub-block + .sub-block {
-  border-top: 1px solid var(--border-subtle);
-}
-.ex-findings {
-  padding: 13px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.ex-path {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--blue-ink);
 }
 
-/* Evaluation Metrics Strip */
+/* Evaluation Metrics */
 .eval-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -751,42 +553,41 @@ td.opt-col {
   border-radius: 8px;
   background: var(--bg);
   overflow: hidden;
-  margin-bottom: 18px;
 }
 .eval-cell {
-  padding: 18px 20px;
+  padding: 20px;
   border-right: 1px solid var(--border-subtle);
 }
 .eval-cell:last-child { border-right: 0; }
 .eval-val {
-  font: 400 30px/1.15 var(--sans-display);
+  font: 400 28px/1.15 var(--sans-display);
   letter-spacing: -0.02em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 .eval-ratio {
-  font: 400 12px/1.3 var(--mono);
-  color: var(--ink-2);
-  margin-top: 4px;
+  font: 500 12px/1.3 var(--mono);
+  color: var(--blue-ink);
+  margin-top: 5px;
 }
 .eval-label {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
   margin-top: 8px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 /* Paper */
 .paper-grid {
   display: grid;
-  grid-template-columns: minmax(0, 5.4fr) minmax(0, 6.6fr);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   gap: 20px;
   align-items: stretch;
 }
 .paper-box {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 18px 20px;
+  padding: 20px 22px;
   background: var(--bg);
   display: flex;
   flex-direction: column;
@@ -794,20 +595,20 @@ td.opt-col {
   gap: 16px;
 }
 .paper-title {
-  font: 500 16.5px/1.4 var(--sans-display);
-  margin: 0 0 6px;
+  font: 500 17px/1.42 var(--sans-display);
+  margin: 0 0 8px;
   color: var(--ink);
 }
-.paper-repro {
+.paper-meta {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.paper-link {
   border-top: 1px solid var(--border-subtle);
   padding-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 16px;
-  font-size: 12.5px;
+  font-size: 13.5px;
+  color: var(--ink-2);
 }
-.paper-repro .k { color: var(--ink-3); font-size: 11.5px; }
-.paper-repro .v { font-family: var(--mono); font-size: 12px; color: var(--ink); margin-top: 2px; }
 
 footer {
   border-top: 1px solid var(--border);
@@ -824,19 +625,17 @@ footer .wrap {
   gap: 12px;
 }
 
-@media (max-width: 980px) {
-  .hero-grid, .two-col, .explorer, .paper-grid { grid-template-columns: minmax(0, 1fr); }
-  .ex-list { border-right: 0; border-bottom: 1px solid var(--border); }
-  .spec-matrix, .eval-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .matrix-cell:nth-child(2), .eval-cell:nth-child(2) { border-right: 0; }
-  .matrix-cell:nth-child(1), .matrix-cell:nth-child(2),
+@media (max-width: 960px) {
+  .hero-grid, .two-col, .paper-grid { grid-template-columns: minmax(0, 1fr); }
+  .eval-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eval-cell:nth-child(2) { border-right: 0; }
   .eval-cell:nth-child(1), .eval-cell:nth-child(2) { border-bottom: 1px solid var(--border-subtle); }
 }
 
 @media (max-width: 720px) {
   html { scroll-padding-top: 104px; }
   .topbar-inner { flex-wrap: wrap; height: auto; padding: 10px 0 0; gap: 10px; }
-  .divider-v, .ver-pill { display: none; }
+  .divider-v { display: none; }
   .topbar-right { order: 2; }
   .wrap { padding: 0 16px; }
   .nav-tabs {
@@ -845,12 +644,11 @@ footer .wrap {
     height: 40px;
     border-top: 1px solid var(--border-subtle);
   }
-  .diff-panes, .spec-matrix, .eval-strip, .paper-repro { grid-template-columns: minmax(0, 1fr); }
+  .diff-panes, .eval-strip { grid-template-columns: minmax(0, 1fr); }
   .pane + .pane { border-left: 0; border-top: 1px solid var(--border-subtle); }
-  .matrix-cell, .eval-cell { border-right: 0; border-bottom: 1px solid var(--border-subtle); }
-  .matrix-cell:last-child, .eval-cell:last-child { border-bottom: 0; }
-  .finding-row { grid-template-columns: auto minmax(0, 1fr); }
-  .finding-row .ptr { grid-column: 2; }
+  .eval-cell { border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+  .eval-cell:last-child { border-bottom: 0; }
+  .contrast-row { grid-template-columns: minmax(0, 1fr); gap: 4px; justify-items: start; }
 }
 </style>
 </head>
@@ -876,7 +674,6 @@ footer .wrap {
       <a href="#paper">Paper</a>
     </nav>
     <div class="topbar-right">
-      <span class="ver-pill">v0.1.0</span>
       <button class="icon-btn" id="theme-toggle" type="button" title="Toggle light / dark theme" aria-label="Toggle color theme">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
       </button>
@@ -896,83 +693,42 @@ footer .wrap {
     <div class="hero-grid">
       <div>
         <h1>Testing Conversation Preservation Across LLM APIs</h1>
-        <p class="lead">LLM API translators can silently drop instructions, alter tool contracts, inject reasoning or sampling controls, and corrupt streamed replies—even when translated payloads are schema-valid. ConvPreserve is a deterministic, rule-based test oracle that checks whether conversation meaning survives translation.</p>
-        <div class="install-box">
-          <code><span class="prompt">$ </span>pip install git+https://github.com/convpreserve/conv-preserve</code>
-          <button class="copy-btn" type="button" data-copy="pip install git+https://github.com/convpreserve/conv-preserve">Copy</button>
-        </div>
+        <p class="lead">API gateways, proxies, and SDK adapters let applications switch between OpenAI, Anthropic, and Gemini—but a translated request or response can pass schema validation (HTTP 200) while silently dropping prompts, stripping tool error flags, masking stop reasons, or injecting parameters. ConvPreserve compares payloads before and after translation to catch silent semantic changes offline, with no API keys, no LLM judge, and no reference outputs required.</p>
         <div class="btn-row">
-          <a class="btn-fill" href="#getting-started">Get started</a>
-          <a class="btn-tonal" href="https://github.com/convpreserve/conv-preserve">Repository</a>
+          <a class="btn-fill" href="#getting-started">Get Started</a>
+          <a class="btn-tonal" href="https://github.com/convpreserve/conv-preserve">View on GitHub</a>
           <a class="btn-tonal" href="#paper">Paper</a>
         </div>
-        <dl class="spec-list">
-          <div><dt>Runtime</dt><dd>Python 3.11+ · zero dependencies</dd></div>
-          <div><dt>Execution</dt><dd>Offline deterministic · no LLM calls</dd></div>
-          <div><dt>Oracles</dt><dd>v1.3 (default) · v1.0 (frozen paper)</dd></div>
-          <div><dt>License</dt><dd>Apache-2.0</dd></div>
-        </dl>
+        <div class="scope-note">
+          <div><strong>Supported APIs:</strong> OpenAI Chat Completions · OpenAI Responses · Anthropic Messages · Google Gemini</div>
+          <div><strong>Covers:</strong> Requests · Responses · Streaming (SSE)</div>
+        </div>
       </div>
 
-      <!-- Interactive Payload & Verdict Inspector -->
-      <div class="inspector" aria-label="Payload comparison inspector">
-        <div class="inspector-tabs" role="tablist" aria-label="Sample translation cases">
-          <button type="button" role="tab" aria-selected="true" data-case="req_inject">Request · Control</button>
-          <button type="button" role="tab" aria-selected="false" data-case="resp_stop">Response · Stop reason</button>
-          <button type="button" role="tab" aria-selected="false" data-case="sse_drift">Stream · Post-stop</button>
-          <button type="button" role="tab" aria-selected="false" data-case="req_clean">Clean pass</button>
-        </div>
-        <div class="inspector-meta">
-          <span id="ins-cmd"></span>
-          <span id="ins-exit" class="chip t1">exit 1</span>
-        </div>
+      <!-- Self-explanatory contrast: Valid HTTP 200 schema vs Silent Semantic Loss -->
+      <div class="compare-card" aria-label="Example of silent information loss">
         <div class="diff-panes">
           <div class="pane">
-            <div class="pane-head"><span id="ins-src-file">src.json</span><span class="pane-dialect" id="ins-src-dialect">openai_chat</span></div>
-            <pre id="ins-src"></pre>
+            <div class="pane-head"><span>Source Request</span><span class="pane-sub">Anthropic Messages</span></div>
+            <pre id="hero-src"></pre>
           </div>
           <div class="pane">
-            <div class="pane-head"><span id="ins-dst-file">dst.json</span><span class="pane-dialect" id="ins-dst-dialect">anthropic_messages</span></div>
-            <pre id="ins-dst"></pre>
+            <div class="pane-head"><span>Translated Request</span><span class="pane-sub">Google Gemini</span></div>
+            <pre id="hero-dst"></pre>
           </div>
         </div>
-        <div class="verdict-bar" id="ins-verdict"></div>
-      </div>
-    </div>
-
-    <div class="spec-matrix" aria-label="Oracle coverage specification">
-      <div class="matrix-cell">
-        <div class="matrix-kicker">4 Wire Dialects</div>
-        <ul class="matrix-list">
-          <li><span class="matrix-key">openai_chat</span><span class="matrix-note">/v1/chat/completions</span></li>
-          <li><span class="matrix-key">openai_responses</span><span class="matrix-note">/v1/responses</span></li>
-          <li><span class="matrix-key">anthropic_messages</span><span class="matrix-note">/v1/messages</span></li>
-          <li><span class="matrix-key">gemini_generatecontent</span><span class="matrix-note">:generateContent</span></li>
-        </ul>
-      </div>
-      <div class="matrix-cell">
-        <div class="matrix-kicker">3 Inspection Sides</div>
-        <ul class="matrix-list">
-          <li><span class="matrix-key">request</span><span class="matrix-note">client → translator</span></li>
-          <li><span class="matrix-key">response</span><span class="matrix-note">upstream → client</span></li>
-          <li><span class="matrix-key">stream</span><span class="matrix-note">SSE frames &amp; deltas</span></li>
-        </ul>
-      </div>
-      <div class="matrix-cell">
-        <div class="matrix-kicker">27 Preservation Rules</div>
-        <ul class="matrix-list">
-          <li><span class="matrix-key">S01 – S13</span><span class="chip t1">T1 semantic</span></li>
-          <li><span class="matrix-key">D01 – D06</span><span class="chip t2">T2 degradation</span></li>
-          <li><span class="matrix-key">R01 – R08</span><span class="chip t3">T3 wire-only</span></li>
-        </ul>
-      </div>
-      <div class="matrix-cell">
-        <div class="matrix-kicker">Evidence &amp; CI Gating</div>
-        <ul class="matrix-list">
-          <li><span class="matrix-key">side:/json/pointer</span><span class="matrix-note">RFC 6901</span></li>
-          <li><span class="matrix-key">--baseline FILE</span><span class="matrix-note">diff-only gate</span></li>
-          <li><span class="matrix-key">--format github</span><span class="matrix-note">step summary</span></li>
-        </ul>
+        <div class="contrast-rows">
+          <div class="contrast-row">
+            <span class="contrast-label">Schema validation</span>
+            <span class="chip ok">Valid (HTTP 200)</span>
+            <span class="contrast-desc">Accepted by the Gemini API without error</span>
+          </div>
+          <div class="contrast-row">
+            <span class="contrast-label">ConvPreserve</span>
+            <span class="chip t1">Silent Loss (T1)</span>
+            <span class="contrast-desc">System prompt <code>"Reply in JSON."</code> dropped during translation</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -981,40 +737,30 @@ footer .wrap {
 <!-- GETTING STARTED -->
 <section id="getting-started">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Getting Started</h2>
-      <span class="sec-sub">Install from source and verify against the 574 bundled reference cases</span>
-    </div>
+    <h2>Getting Started</h2>
     <div class="two-col">
       <div class="code-card">
         <div class="code-head">
-          <span>1. Install &amp; run self-test</span>
-          <button class="copy-btn" type="button" data-copy="git clone https://github.com/convpreserve/conv-preserve.git
-cd conv-preserve
-pip install .
-convpreserve selftest">Copy</button>
+          <span>1. Install &amp; compare two payloads</span>
+          <button class="copy-btn" type="button" data-copy="pip install git+https://github.com/convpreserve/conv-preserve.git
+convpreserve check --side request --src-dialect openai --dst-dialect anthropic before.json after.json">Copy</button>
         </div>
-        <pre><span class="prompt">$ </span>git clone https://github.com/convpreserve/conv-preserve.git
-<span class="prompt">$ </span>cd conv-preserve &amp;&amp; pip install .
-<span class="prompt">$ </span>convpreserve selftest
-<span class="cm">400 identical / 400 total
-rule cases: 174 identical / 174 total</span>
-<span class="ok-txt">PASS</span></pre>
+        <pre><span class="prompt">$ </span>pip install git+https://github.com/convpreserve/conv-preserve.git
+<span class="prompt">$ </span>convpreserve check --side request \
+    --src-dialect openai --dst-dialect anthropic \
+    before.json after.json
+<span class="t1-txt">S08  T1</span>  unlicensed control thinking injected  <span class="ptr-txt">dst:/thinking</span></pre>
+        <div class="code-foot">Python 3.11+ · zero dependencies · exits with 0 when preserved or 1 on silent loss.</div>
       </div>
 
       <div class="code-card">
         <div class="code-head">
-          <span>2. Check a pair or a JSONL manifest</span>
-          <button class="copy-btn" type="button" data-copy="convpreserve check --side request --src-dialect openai --dst-dialect anthropic examples/quickstart/src.json examples/quickstart/dst_thinking_injected.json
-convpreserve batch examples/manifest.jsonl --out findings.jsonl">Copy</button>
+          <span>2. Or test a running local gateway</span>
+          <button class="copy-btn" type="button" data-copy="convpreserve probe --gateway http://127.0.0.1:8080 --target openai">Copy</button>
         </div>
-        <pre><span class="prompt">$ </span>convpreserve check --side request --src-dialect openai \
-    --dst-dialect anthropic examples/quickstart/src.json \
-    examples/quickstart/dst_thinking_injected.json
-<span class="t1-txt">S08  T1</span>  unlicensed control thinking injected  <span class="ptr-txt">dst:/thinking</span>
-
-<span class="prompt">$ </span>convpreserve batch examples/manifest.jsonl --out findings.jsonl
-pairs=14 errors=0 <span class="t1-txt">T1=26</span> <span class="t2-txt">T2=5</span> T3=7 pairs_with_T1=14</pre>
+        <pre><span class="sc"># Point your gateway's upstream URL at http://127.0.0.1:18600</span>
+<span class="prompt">$ </span>convpreserve probe --gateway http://127.0.0.1:8080 --target openai</pre>
+        <div class="code-foot">Starts a local mock upstream server and sends 51 built-in test requests—no API keys needed.</div>
       </div>
     </div>
   </div>
@@ -1023,87 +769,72 @@ pairs=14 errors=0 <span class="t1-txt">T1=26</span> <span class="t2-txt">T2=5</s
 <!-- DOCUMENTATION -->
 <section id="documentation">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Documentation</h2>
-      <span class="sec-sub">CLI subcommands, severity tiers, and continuous integration hooks</span>
-    </div>
-    <div class="table-box table-scroll" style="margin-bottom:20px">
-      <table>
-        <thead>
-          <tr><th>Subcommand</th><th>Options</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-          <tr><td class="cmd-col">convpreserve check</td><td class="opt-col">--side --src-dialect --dst-dialect [--json | --format github]</td><td>Compare one source payload against its translated counterpart (<code>-</code> reads stdin).</td></tr>
-          <tr><td class="cmd-col">convpreserve batch</td><td class="opt-col">MANIFEST [--out FILE] [--summary-md FILE] [--fail-on TIER]</td><td>Evaluate a JSONL manifest of pairs and aggregate counts by rule and dialect pair.</td></tr>
-          <tr><td class="cmd-col">convpreserve probe</td><td class="opt-col">--gateway URL --target {openai,responses,gemini,anthropic}</td><td>Start a local loopback sink, send 51 Anthropic request shapes, and judge forwarded traffic.</td></tr>
-          <tr><td class="cmd-col">convpreserve explain</td><td class="opt-col">RULE | --list [--json]</td><td>Print rule definition, tier, principle, and curated translator root causes (<code>S03–S09</code>).</td></tr>
-          <tr><td class="cmd-col">convpreserve selftest</td><td class="opt-col">[--oracle v1.0 | v1.3]</td><td>Replay the 400-pair stratified sample and 174 per-rule unit cases.</td></tr>
-          <tr><td class="cmd-col">convpreserve dialects</td><td class="opt-col">—</td><td>List canonical dialect identifiers and short CLI aliases (<code>openai</code>, <code>responses</code>, <code>anthropic</code>, <code>gemini</code>).</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="two-col">
-      <div class="table-box">
-        <table>
-          <thead><tr><th>Tier</th><th>Semantics</th><th class="num">Default exit</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><span class="chip t1">T1</span></td>
-              <td>Silent semantic change to messages, roles, tool schemas/calls, controls, reasoning, or stop reasons (<code>S01–S13</code>).</td>
-              <td class="num"><span class="chip t1">exit 1</span></td>
-            </tr>
-            <tr>
-              <td><span class="chip t2">T2</span></td>
-              <td>Declared capability loss, adapter-injected default where unset, or dropped cache/usage metadata (<code>D01–D06</code>).</td>
-              <td class="num"><span class="chip ok">exit 0</span><span class="exit-sub">1 with --fail-on T2</span></td>
-            </tr>
-            <tr>
-              <td><span class="chip t3">T3</span></td>
-              <td>Wire representation difference only; conversation semantics preserved (<code>R01–R08</code>).</td>
-              <td class="num"><span class="chip ok">exit 0</span><span class="exit-sub">1 with --fail-on T3</span></td>
-            </tr>
-          </tbody>
-        </table>
+    <h2>Documentation</h2>
+    <div class="doc-stack">
+      <div>
+        <h3>Finding Categories</h3>
+        <div class="table-box table-scroll">
+          <table>
+            <thead>
+              <tr><th>Tier</th><th>Rules</th><th>Classification</th><th>What It Checks</th><th>Default Exit</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="nowrap"><span class="chip t1">T1</span></td>
+                <td class="opt-col nowrap">S01–S13</td>
+                <td class="nowrap"><strong>Silent semantic loss</strong></td>
+                <td>Avoidable changes to prompts, message roles, tool schemas, tool calls or error flags, sampling/reasoning parameters, or stop reasons.</td>
+                <td class="nowrap"><span class="chip t1">exit 1</span></td>
+              </tr>
+              <tr>
+                <td class="nowrap"><span class="chip t2">T2</span></td>
+                <td class="opt-col nowrap">D01–D06</td>
+                <td class="nowrap"><strong>Target API limitation</strong></td>
+                <td>Target API lacks a direct equivalent (e.g., <code>system</code> merged into <code>user</code> message), translator fills in a default parameter, or cache/usage metadata changes.</td>
+                <td class="nowrap"><span class="chip ok">exit 0</span></td>
+              </tr>
+              <tr>
+                <td class="nowrap"><span class="chip t3">T3</span></td>
+                <td class="opt-col nowrap">R01–R08</td>
+                <td class="nowrap"><strong>Equivalent format difference</strong></td>
+                <td>Different JSON structure with identical conversation meaning, such as empty string vs. null or merged adjacent text blocks.</td>
+                <td class="nowrap"><span class="chip ok">exit 0</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div>
-        <div class="seg-tabs" role="tablist" aria-label="CI integration">
-          <button type="button" role="tab" aria-selected="true" aria-controls="ci-gha" id="t-gha">GitHub Action</button>
-          <button type="button" role="tab" aria-selected="false" aria-controls="ci-pc" id="t-pc">pre-commit</button>
-          <button type="button" role="tab" aria-selected="false" aria-controls="ci-bl" id="t-bl">Baseline gating</button>
-        </div>
-        <div class="code-card" id="ci-gha" role="tabpanel" aria-labelledby="t-gha">
-          <div class="code-head"><span class="mono-label">.github/workflows/convpreserve.yml</span><button class="copy-btn" type="button" data-copy="- uses: convpreserve/conv-preserve@main
-  with:
-    mode: batch
-    manifest: tests/fixtures/manifest.jsonl
-    fail-on: T1">Copy</button></div>
-          <pre>- uses: convpreserve/conv-preserve@main
-  with:
-    mode: batch
-    manifest: tests/fixtures/manifest.jsonl
-    fail-on: T1</pre>
-        </div>
-        <div class="code-card" id="ci-pc" role="tabpanel" aria-labelledby="t-pc" hidden>
-          <div class="code-head"><span class="mono-label">.pre-commit-config.yaml</span><button class="copy-btn" type="button" data-copy="repos:
-  - repo: https://github.com/convpreserve/conv-preserve
-    rev: main
-    hooks:
-      - id: convpreserve-batch
-      - id: convpreserve-selftest">Copy</button></div>
-          <pre>repos:
-  - repo: https://github.com/convpreserve/conv-preserve
-    rev: main
-    hooks:
-      - id: convpreserve-batch
-      - id: convpreserve-selftest</pre>
-        </div>
-        <div class="code-card" id="ci-bl" role="tabpanel" aria-labelledby="t-bl" hidden>
-          <div class="code-head"><span>Snapshot known findings &amp; fail only on regressions</span><button class="copy-btn" type="button" data-copy="convpreserve batch pairs.jsonl --write-baseline baseline.json --fail-on none
-convpreserve batch pairs.jsonl --baseline baseline.json">Copy</button></div>
-          <pre><span class="prompt">$ </span>convpreserve batch pairs.jsonl --write-baseline baseline.json --fail-on none
-<span class="prompt">$ </span>convpreserve batch pairs.jsonl --baseline baseline.json</pre>
+        <h3>CLI Reference</h3>
+        <div class="table-box table-scroll">
+          <table>
+            <thead>
+              <tr><th>Command</th><th>Arguments</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="cmd-col">convpreserve check</td>
+                <td class="opt-col">--side {request,response,stream} --src-dialect FMT --dst-dialect FMT BEFORE AFTER</td>
+                <td>Compare a payload before and after translation (formats: <code>openai | responses | anthropic | gemini</code>; pass <code>--json</code> for JSON output).</td>
+              </tr>
+              <tr>
+                <td class="cmd-col">convpreserve batch</td>
+                <td class="opt-col">MANIFEST.jsonl [--out FILE] [--summary-md FILE]</td>
+                <td>Check a batch of payload pairs listed in a <code>.jsonl</code> file for regression suites and CI pipelines.</td>
+              </tr>
+              <tr>
+                <td class="cmd-col">convpreserve probe</td>
+                <td class="opt-col">--gateway URL --target {openai,responses,gemini,anthropic}</td>
+                <td>Test a running local gateway end-to-end: starts a local mock upstream server (<code>127.0.0.1:18600</code>), sends 51 built-in test requests, and checks every forwarded payload.</td>
+              </tr>
+              <tr>
+                <td class="cmd-col">convpreserve explain</td>
+                <td class="opt-col">RULE_ID | --list</td>
+                <td>Show what a rule checks and known bug patterns in open-source translators (for example, <code>convpreserve explain S08</code>).</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1113,42 +844,30 @@ convpreserve batch pairs.jsonl --baseline baseline.json">Copy</button></div>
 <!-- EXAMPLES -->
 <section id="examples">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Examples</h2>
-      <span class="sec-sub">Representative cross-dialect pairs shipped in <code>examples/</code></span>
-    </div>
-    <div class="explorer" aria-label="Bundled dialect-pair examples">
-      <div class="ex-list" role="listbox" aria-label="Dialect pairs">
-        <button type="button" class="ex-item" role="option" aria-selected="true" data-ex="0">
-          <div class="ex-top"><span>anthropic → openai_chat</span><span class="chip t1">S09 · T1</span></div>
-          <div class="ex-sub">request · declared tool names truncated, cache hint dropped</div>
-        </button>
-        <button type="button" class="ex-item" role="option" aria-selected="false" data-ex="1">
-          <div class="ex-top"><span>anthropic → gemini</span><span class="chip t1">S05 · T1</span></div>
-          <div class="ex-sub">request · developer / system instruction silently dropped</div>
-        </button>
-        <button type="button" class="ex-item" role="option" aria-selected="false" data-ex="2">
-          <div class="ex-top"><span>openai_chat → openai_responses</span><span class="chip t1">S05 · T1</span></div>
-          <div class="ex-sub">response · assistant message text lost during conversion</div>
-        </button>
-        <button type="button" class="ex-item" role="option" aria-selected="false" data-ex="3">
-          <div class="ex-top"><span>openai_chat → gemini</span><span class="chip t1">S06 · T1</span></div>
-          <div class="ex-sub">stream · tool call dropped and finish reason lost</div>
-        </button>
-        <button type="button" class="ex-item" role="option" aria-selected="false" data-ex="4">
-          <div class="ex-top"><span>gemini → openai_chat</span><span class="chip t1">S04 · T1</span></div>
-          <div class="ex-sub">stream · UTF-8 / escaped tool-call JSON arguments corrupted</div>
-        </button>
+    <h2>Examples</h2>
+    <div class="compare-card" aria-label="Interactive silent translation bug examples">
+      <div class="ex-tabs" role="tablist" aria-label="Translation defect examples">
+        <button type="button" role="tab" aria-selected="true" data-ex="tool_err">1. Tool error flag dropped</button>
+        <button type="button" role="tab" aria-selected="false" data-ex="thinking">2. Reasoning control injected</button>
+        <button type="button" role="tab" aria-selected="false" data-ex="stop_reason">3. Safety stop reason masked</button>
+        <button type="button" role="tab" aria-selected="false" data-ex="sse_stream">4. Corrupted SSE reply stream</button>
       </div>
-      <div class="ex-detail">
-        <div class="sub-block">
-          <div class="code-head"><span>Command</span><button class="copy-btn" id="ex-copy" type="button" data-copy="">Copy</button></div>
-          <pre id="ex-cmd"></pre>
+      <div class="diff-panes">
+        <div class="pane">
+          <div class="pane-head"><span id="ex-src-title">Source Request</span><span class="pane-sub" id="ex-src-api">Anthropic Messages</span></div>
+          <pre id="ex-src"></pre>
         </div>
-        <div class="sub-block">
-          <div class="code-head"><span>Findings (Oracle v1.3)</span><span class="chip t1">exit 1</span></div>
-          <div class="ex-findings" id="ex-out"></div>
+        <div class="pane">
+          <div class="pane-head"><span id="ex-dst-title">Translated Request</span><span class="pane-sub" id="ex-dst-api">OpenAI Chat</span></div>
+          <pre id="ex-dst"></pre>
         </div>
+      </div>
+      <div class="ex-verdict">
+        <div class="ex-verdict-main">
+          <span class="chip t1" id="ex-badge">S03 · T1</span>
+          <span id="ex-desc"></span>
+        </div>
+        <span class="ex-path" id="ex-ptr"></span>
       </div>
     </div>
   </div>
@@ -1157,44 +876,28 @@ convpreserve batch pairs.jsonl --baseline baseline.json">Copy</button></div>
 <!-- EVALUATION -->
 <section id="evaluation">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Evaluation</h2>
-      <span class="sec-sub">Empirical audit across 6 open-source and official SDK translation layers</span>
-    </div>
+    <h2>Evaluation</h2>
     <div class="eval-strip">
       <div class="eval-cell">
+        <div class="eval-val">76.0%</div>
+        <div class="eval-ratio">recall · 2.0% false-alarm rate</div>
+        <div class="eval-label">Catches 95 of 125 injected translation bugs on held-out tests, with only 2 false alarms across 100 valid format conversions.</div>
+      </div>
+      <div class="eval-cell">
         <div class="eval-val">18.5%</div>
-        <div class="eval-ratio">127 / 685 requests</div>
-        <div class="eval-label">Statically valid translations that silently alter prompt or tool fields</div>
+        <div class="eval-ratio">127 / 685 translated requests</div>
+        <div class="eval-label">Requests across 5 popular translators that pass schema validation yet silently alter prompts, roles, or tools.</div>
       </div>
       <div class="eval-cell">
         <div class="eval-val">36.4%</div>
-        <div class="eval-ratio">203 / 558 streams</div>
-        <div class="eval-label">Translated SSE replies that fail or corrupt messages in an official SDK</div>
+        <div class="eval-ratio">203 / 558 translated streams</div>
+        <div class="eval-label">Translated SSE streams that crash or silently corrupt messages when parsed by an official OpenAI SDK.</div>
       </div>
       <div class="eval-cell">
-        <div class="eval-val">95.8%</div>
-        <div class="eval-ratio">release → git HEAD</div>
-        <div class="eval-label">Affected cells on tested releases still affected at repository HEAD</div>
+        <div class="eval-val">7 fixed</div>
+        <div class="eval-ratio">26 bugs reported · 12 projects</div>
+        <div class="eval-label">Confirmed translation bugs reported to open-source gateway and SDK maintainers, with 7 fixes already merged.</div>
       </div>
-      <div class="eval-cell">
-        <div class="eval-val">31 / 7</div>
-        <div class="eval-ratio">6 translators · 2 raters</div>
-        <div class="eval-label">Confirmed translator defects traced, with 7 upstream reports already fixed</div>
-      </div>
-    </div>
-
-    <div class="table-box table-scroll">
-      <table>
-        <thead>
-          <tr><th>Evaluation dimension</th><th>Scope</th><th class="num">Result</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Request-side semantic drift across validity &amp; counting rules</td><td>685 contract-valid synthetic translations (vendor-accepted subset matches)</td><td class="num"><code>12.9% – 25.7%</code></td></tr>
-          <tr><td>Downstream behavioural impact in live model trials</td><td>6 frontier &amp; open-weight models on field-dependent tasks</td><td class="num"><code>50% of mechanisms</code></td></tr>
-          <tr><td>Bundled self-test reproducibility (<code>convpreserve selftest</code>)</td><td>400 stratified calls + 174 per-rule unit cases across 27 rules</td><td class="num"><span class="chip ok">574 / 574 PASS</span></td></tr>
-        </tbody>
-      </table>
     </div>
   </div>
 </section>
@@ -1202,25 +905,15 @@ convpreserve batch pairs.jsonl --baseline baseline.json">Copy</button></div>
 <!-- PAPER -->
 <section id="paper">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Paper</h2>
-      <span class="sec-sub">Reference specification</span>
-    </div>
+    <h2>Paper</h2>
     <div class="paper-grid">
       <div class="paper-box">
         <div>
           <p class="paper-title">Testing Conversation Preservation Across LLM APIs: A Rule-Based Oracle for Detecting Silent Information Loss</p>
-          <div style="color:var(--ink-2);font-size:14px">Anonymous authors · Under review (2026)</div>
+          <div class="paper-meta">Anonymous authors · Under review (2026)</div>
         </div>
-        <div class="paper-repro">
-          <div>
-            <div class="k">Frozen paper oracle</div>
-            <div class="v">--oracle v1.0</div>
-          </div>
-          <div>
-            <div class="k">Bundled verification</div>
-            <div class="v">convpreserve selftest</div>
-          </div>
+        <div class="paper-link">
+          Code, test suites, and bundled examples: <a href="https://github.com/convpreserve/conv-preserve">github.com/convpreserve/conv-preserve</a>
         </div>
       </div>
     </div>
@@ -1245,8 +938,7 @@ function hlLine(raw) {
   if (/^\s*\/\//.test(raw)) return `<span class="sc">${esc(raw)}</span>`;
   if (/^(event|data):/.test(raw)) {
     const idx = raw.indexOf(":");
-    const head = `<span class="sk">${esc(raw.slice(0, idx + 1))}</span>`;
-    return head + hlJsonTokens(raw.slice(idx + 1));
+    return `<span class="sk">${esc(raw.slice(0, idx + 1))}</span>` + hlJsonTokens(raw.slice(idx + 1));
   }
   return hlJsonTokens(raw);
 }
@@ -1257,11 +949,9 @@ function hlJsonTokens(s) {
   while ((m = re.exec(s)) !== null) {
     out += esc(s.slice(last, m.index));
     if (m[1] !== undefined) {
-      if (m[2] !== undefined) {
-        out += `<span class="sk">${esc(m[1])}</span>${esc(m[2])}`;
-      } else {
-        out += `<span class="ss">${esc(m[1])}</span>`;
-      }
+      out += m[2] !== undefined
+        ? `<span class="sk">${esc(m[1])}</span>${esc(m[2])}`
+        : `<span class="ss">${esc(m[1])}</span>`;
     } else {
       out += `<span class="sn">${esc(m[3])}</span>`;
     }
@@ -1270,231 +960,170 @@ function hlJsonTokens(s) {
   return out + esc(s.slice(last));
 }
 
-const CASES = {
-  req_inject: {
-    cmd: "$ convpreserve check --side request \\\n    --src-dialect openai --dst-dialect anthropic src.json dst.json",
-    exit: ["exit 1", "t1"],
-    srcFile: "src.json", srcDialect: "openai_chat",
-    dstFile: "dst.json", dstDialect: "anthropic_messages",
-    src: [
-      ["{", ""],
-      ['  "model": "m",', ""],
-      ['  "max_tokens": 256,', ""],
-      ['  "messages": [{', ""],
-      ['    "role": "user",', ""],
-      ['    "content": "weather in Paris?"', ""],
-      ["  }]", ""],
-      ["}", ""]
-    ],
-    dst: [
-      ["{", ""],
-      ['  "model": "m", "max_tokens": 256,', ""],
-      ['  "thinking": {', "bad"],
-      ['    "type": "enabled",', "bad"],
-      ['    "budget_tokens": 1024', "bad"],
-      ['  },', "bad"],
-      ['  "messages": [{', ""],
-      ['    "role": "user",', ""],
-      ['    "content": "weather in Paris?"', ""],
-      ["  }]", ""],
-      ["}", ""]
-    ],
-    verdicts: [
-      ["S08", "t1", "unlicensed control thinking injected: {'type': 'enabled', 'budget_tokens': 1024}", "dst:/thinking"]
-    ]
-  },
-  resp_stop: {
-    cmd: "$ convpreserve check --side response \\\n    --src-dialect openai --dst-dialect anthropic src.json dst.json",
-    exit: ["exit 1", "t1"],
-    srcFile: "src.json", srcDialect: "openai_chat",
-    dstFile: "dst.json", dstDialect: "anthropic_messages",
-    src: [
-      ["{", ""],
-      ['  "id": "chatcmpl-abc",', ""],
-      ['  "choices": [{', ""],
-      ['    "finish_reason": "content_filter",', ""],
-      ['    "message": {', ""],
-      ['      "role": "assistant", "content": null', ""],
-      ["    }", ""],
-      ["  }]", ""],
-      ["}", ""]
-    ],
-    dst: [
-      ["{", ""],
-      ['  "id": "msg_x", "type": "message",', ""],
-      ['  "role": "assistant",', ""],
-      ['  "content": [],', ""],
-      ['  "finish_reason": "refusal"', "bad"],
-      ["  // Anthropic carrier is stop_reason", "bad"],
-      ["}", ""]
-    ],
-    verdicts: [
-      ["S12", "t1", "stop/finish reason semantic class changed: 'content_filter' -> None", "dst:/finish_reason"],
-      ["R04", "t3", "unknown custom key on envelope: 'finish_reason'", "dst:/finish_reason"]
-    ]
-  },
-  sse_drift: {
-    cmd: "$ convpreserve check --side stream \\\n    --src-dialect openai --dst-dialect anthropic src.json dst.sse",
-    exit: ["exit 1", "t1"],
-    srcFile: "src.json", srcDialect: "openai_chat",
-    dstFile: "dst.sse", dstDialect: "anthropic_messages",
-    src: [
-      ["{", ""],
-      ['  "id": "chatcmpl-abc",', ""],
-      ['  "choices": [{', ""],
-      ['    "finish_reason": "stop",', ""],
-      ['    "message": {', ""],
-      ['      "role": "assistant", "content": "ok"', ""],
-      ["    }", ""],
-      ["  }]", ""],
-      ["}", ""]
-    ],
-    dst: [
-      ["event: content_block_delta", ""],
-      ['data: {"index":0,"delta":{"text":"ok"}}', ""],
-      ["event: content_block_stop", ""],
-      ['data: {"type":"content_block_stop","index":0}', ""],
-      ["event: content_block_delta", "bad"],
-      ['data: {"index":0,"delta":{"text":" (continued)"}}', "bad"]
-    ],
-    verdicts: [
-      ["S05", "t1", "invented assistant text (adapter-inserted): '(continued)'", "dst:/5/delta/text"],
-      ["S13", "t1", "stream protocol anomaly: delta_after_content_block_stop:0", "dst:/3"]
-    ]
-  },
-  req_clean: {
-    cmd: "$ convpreserve check --side request \\\n    --src-dialect openai --dst-dialect anthropic src.json dst_clean.json",
-    exit: ["exit 0", "ok"],
-    srcFile: "src.json", srcDialect: "openai_chat",
-    dstFile: "dst_clean.json", dstDialect: "anthropic_messages",
-    src: [
-      ["{", ""],
-      ['  "model": "m",', ""],
-      ['  "max_tokens": 256,', ""],
-      ['  "messages": [{', ""],
-      ['    "role": "user",', ""],
-      ['    "content": "weather in Paris?"', ""],
-      ["  }]", ""],
-      ["}", ""]
-    ],
-    dst: [
-      ["{", ""],
-      ['  "model": "m",', ""],
-      ['  "max_tokens": 256,', "good"],
-      ['  "messages": [{', ""],
-      ['    "role": "user",', "good"],
-      ['    "content": "weather in Paris?"', "good"],
-      ["  }]", ""],
-      ["}", ""]
-    ],
-    verdicts: [
-      ["PASS", "ok", "No semantic or representation findings.", ""]
-    ]
-  }
-};
-
 function renderLines(arr) {
   return arr.map(([l, cl], i) =>
     `<span class="ln ${cl}"><span class="lno">${i + 1}</span><span>${hlLine(l)}</span></span>`
   ).join("");
 }
 
-function renderFindingsList(items) {
-  return `<div class="finding-list">` + items.map(([r, cl, d, p]) =>
-    `<div class="finding-row">` +
-      `<span class="chip ${cl}">${esc(r)}${cl.startsWith("t") ? " · " + cl.toUpperCase() : ""}</span>` +
-      `<span class="finding-detail">${esc(d)}</span>` +
-      (p ? `<span class="ptr">${esc(p)}</span>` : `<span></span>`) +
-    `</div>`
-  ).join("") + `</div>`;
-}
+// Overview static motivating pair
+document.getElementById("hero-src").innerHTML = renderLines([
+  ["{", ""],
+  ['  "system": "Reply in JSON.",', "bad"],
+  ['  "messages": [{', ""],
+  ['    "role": "user",', ""],
+  ['    "content": "Weather in Paris?"', ""],
+  ["  }]", ""],
+  ["}", ""]
+]);
+document.getElementById("hero-dst").innerHTML = renderLines([
+  ["{", ""],
+  ["  // systemInstruction dropped", "bad"],
+  ['  "contents": [{', ""],
+  ['    "role": "user",', ""],
+  ['    "parts": [', ""],
+  ['      {"text": "Weather in Paris?"}', ""],
+  ["    ]", ""],
+  ["  }]", ""],
+  ["}", ""]
+]);
 
-function renderCase(key) {
-  const c = CASES[key];
-  document.getElementById("ins-cmd").textContent = c.cmd;
-  const ex = document.getElementById("ins-exit");
-  ex.textContent = c.exit[0];
-  ex.className = "chip " + c.exit[1];
-  document.getElementById("ins-src-file").textContent = c.srcFile;
-  document.getElementById("ins-src-dialect").textContent = c.srcDialect;
-  document.getElementById("ins-dst-file").textContent = c.dstFile;
-  document.getElementById("ins-dst-dialect").textContent = c.dstDialect;
-  document.getElementById("ins-src").innerHTML = renderLines(c.src);
-  document.getElementById("ins-dst").innerHTML = renderLines(c.dst);
-  document.getElementById("ins-verdict").innerHTML =
-    `<div class="verdict-head"><span>Oracle v1.3 verdict</span><span>rule · detail · evidence pointer</span></div>` +
-    renderFindingsList(c.verdicts);
-}
-
-document.querySelectorAll("[data-case]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("[data-case]").forEach(b => b.setAttribute("aria-selected", String(b === btn)));
-    renderCase(btn.dataset.case);
-  });
-});
-renderCase("req_inject");
-
-const EXAMPLES = [
-  {
-    cmd: "convpreserve check --side request \\\n  --src-dialect anthropic_messages --dst-dialect openai_chat \\\n  examples/request/anthropic_messages__openai_chat/src.json \\\n  examples/request/anthropic_messages__openai_chat/dst.json",
-    findings: [
-      ["S09", "t1", "declared tool names changed: 65-char identifier truncated to 64 chars", "dst:/tools"],
-      ["D03", "t2", "cache_control hints dropped (1 -> 0)", "src:/system/0/cache_control"]
-    ]
+// Interactive real-world bug examples
+const EXAMPLES = {
+  tool_err: {
+    srcTitle: "Source Request", srcApi: "Anthropic Messages",
+    dstTitle: "Translated Request", dstApi: "OpenAI Chat",
+    src: [
+      ["{", ""],
+      ['  "role": "user",', ""],
+      ['  "content": [{', ""],
+      ['    "type": "tool_result",', ""],
+      ['    "tool_use_id": "call_1",', ""],
+      ['    "is_error": true,', "bad"],
+      ['    "content": "Permission denied"', ""],
+      ["  }]", ""],
+      ["}", ""]
+    ],
+    dst: [
+      ["{", ""],
+      ['  "role": "tool",', ""],
+      ['  "tool_call_id": "call_1",', ""],
+      ['  "content": "Permission denied"', "bad"],
+      ["  // is_error=true dropped", "bad"],
+      ["}", ""]
+    ],
+    badge: "S03 · T1",
+    desc: "Tool execution error flag (is_error: true) silently dropped during translation.",
+    ptr: "Dropped field: is_error"
   },
-  {
-    cmd: "convpreserve check --side request \\\n  --src-dialect anthropic_messages --dst-dialect gemini_generatecontent \\\n  examples/request/anthropic_messages__gemini_generatecontent/src.json \\\n  examples/request/anthropic_messages__gemini_generatecontent/dst.json",
-    findings: [
-      ["S05", "t1", "lost developer text 'Be careful.'", "src:/system"]
-    ]
+  thinking: {
+    srcTitle: "Source Request", srcApi: "OpenAI Chat",
+    dstTitle: "Translated Request", dstApi: "Anthropic Messages",
+    src: [
+      ["{", ""],
+      ['  "model": "gpt-4o",', ""],
+      ['  "max_tokens": 256,', ""],
+      ['  "messages": [{', ""],
+      ['    "role": "user",', ""],
+      ['    "content": "Summarize this note."', ""],
+      ["  }]", ""],
+      ["}", ""]
+    ],
+    dst: [
+      ["{", ""],
+      ['  "model": "claude-sonnet-4-20250514",', ""],
+      ['  "max_tokens": 256,', ""],
+      ['  "thinking": {', "bad"],
+      ['    "type": "enabled",', "bad"],
+      ['    "budget_tokens": 1024', "bad"],
+      ["  },", "bad"],
+      ['  "messages": [{', ""],
+      ['    "role": "user",', ""],
+      ['    "content": "Summarize this note."', ""],
+      ["  }]", ""],
+      ["}", ""]
+    ],
+    badge: "S08 · T1",
+    desc: "Unrequested reasoning budget (thinking.budget_tokens = 1024) injected by translator.",
+    ptr: "Injected field: thinking"
   },
-  {
-    cmd: "convpreserve check --side response \\\n  --src-dialect openai_chat --dst-dialect openai_responses \\\n  examples/response/openai_chat__openai_responses/src.json \\\n  examples/response/openai_chat__openai_responses/dst.json",
-    findings: [
-      ["S05", "t1", "lost assistant text 'The quick brown fox jumps over the lazy dog...'", "src:/choices/0/message/content"],
-      ["R08", "t3", "envelope id changed: 'chatcmpl-abc' -> 'resp_ref'", "dst:/id"]
-    ]
+  stop_reason: {
+    srcTitle: "Source Response", srcApi: "OpenAI Chat",
+    dstTitle: "Translated Response", dstApi: "Anthropic Messages",
+    src: [
+      ["{", ""],
+      ['  "id": "chatcmpl-1",', ""],
+      ['  "choices": [{', ""],
+      ['    "finish_reason": "content_filter",', "bad"],
+      ['    "message": {', ""],
+      ['      "role": "assistant",', ""],
+      ['      "content": ""', ""],
+      ["    }", ""],
+      ["  }]", ""],
+      ["}", ""]
+    ],
+    dst: [
+      ["{", ""],
+      ['  "id": "msg_1",', ""],
+      ['  "type": "message",', ""],
+      ['  "role": "assistant",', ""],
+      ['  "stop_reason": "end_turn",', "bad"],
+      ['  "content": []', ""],
+      ["}", ""]
+    ],
+    badge: "S12 · T1",
+    desc: "Safety filter termination ('content_filter') rewritten as normal completion ('end_turn').",
+    ptr: "Rewritten field: stop_reason"
   },
-  {
-    cmd: "convpreserve check --side stream \\\n  --src-dialect openai_chat --dst-dialect gemini_generatecontent \\\n  examples/stream/openai_chat__gemini_generatecontent/src.json \\\n  examples/stream/openai_chat__gemini_generatecontent/dst.sse",
-    findings: [
-      ["S06", "t1", "tool call/result reference pairing broken: calls ['#0'] -> []", "dst:(root)"],
-      ["S05", "t1", "lost assistant tool_call 'get_weather|{\"city\":\"Paris\"}'", "src:(root)"],
-      ["S12", "t1", "stop/finish reason semantic class changed: 'tool_use' -> None", "dst:(root)"]
-    ]
-  },
-  {
-    cmd: "convpreserve check --side stream \\\n  --src-dialect gemini_generatecontent --dst-dialect openai_chat \\\n  examples/stream/gemini_generatecontent__openai_chat/src.json \\\n  examples/stream/gemini_generatecontent__openai_chat/dst.sse",
-    findings: [
-      ["S04", "t1", "tool_call #0 JSON arguments corrupted across SSE chunks ('C:\\\\tmp\\\\файл.txt')", "dst:(root)"]
-    ]
+  sse_stream: {
+    srcTitle: "Source Response", srcApi: "OpenAI Chat",
+    dstTitle: "Translated Stream (SSE)", dstApi: "Anthropic Messages",
+    src: [
+      ["{", ""],
+      ['  "id": "chatcmpl-1",', ""],
+      ['  "choices": [{', ""],
+      ['    "finish_reason": "stop",', ""],
+      ['    "message": {', ""],
+      ['      "role": "assistant",', ""],
+      ['      "content": "Done."', ""],
+      ["    }", ""],
+      ["  }]", ""],
+      ["}", ""]
+    ],
+    dst: [
+      ["event: content_block_delta", ""],
+      ['data: {"index":0,"delta":{"text":"Done."}}', ""],
+      ["event: content_block_stop", ""],
+      ['data: {"type":"content_block_stop","index":0}', ""],
+      ["event: content_block_delta", "bad"],
+      ['data: {"index":0,"delta":{"text":" more"}}', "bad"]
+    ],
+    badge: "S13 · T1",
+    desc: "Stream protocol violation: content_block_delta emitted on block 0 after content_block_stop.",
+    ptr: "Invalid event: delta after stop"
   }
-];
+};
 
-function renderExample(idx) {
-  const item = EXAMPLES[idx];
-  document.getElementById("ex-cmd").textContent = "$ " + item.cmd;
-  document.getElementById("ex-copy").dataset.copy = item.cmd.replace(/\\\n\s*/g, "");
-  document.getElementById("ex-out").innerHTML = renderFindingsList(item.findings);
+function renderEx(key) {
+  const ex = EXAMPLES[key];
+  document.getElementById("ex-src-title").textContent = ex.srcTitle;
+  document.getElementById("ex-src-api").textContent = ex.srcApi;
+  document.getElementById("ex-dst-title").textContent = ex.dstTitle;
+  document.getElementById("ex-dst-api").textContent = ex.dstApi;
+  document.getElementById("ex-src").innerHTML = renderLines(ex.src);
+  document.getElementById("ex-dst").innerHTML = renderLines(ex.dst);
+  document.getElementById("ex-badge").textContent = ex.badge;
+  document.getElementById("ex-desc").textContent = ex.desc;
+  document.getElementById("ex-ptr").textContent = ex.ptr;
 }
+
 document.querySelectorAll("[data-ex]").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("[data-ex]").forEach(b => b.setAttribute("aria-selected", String(b === btn)));
-    renderExample(Number(btn.dataset.ex));
+    renderEx(btn.dataset.ex);
   });
 });
-renderExample(0);
-
-document.querySelectorAll(".seg-tabs").forEach(group => {
-  const tabs = [...group.querySelectorAll('[role="tab"]')];
-  tabs.forEach(tab => tab.addEventListener("click", () => {
-    tabs.forEach(t => {
-      const on = t === tab;
-      t.setAttribute("aria-selected", String(on));
-      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
-    });
-  }));
-});
+renderEx("tool_err");
 
 document.querySelectorAll(".copy-btn").forEach(btn => {
   btn.addEventListener("click", () => {
